@@ -9,8 +9,8 @@ from telegram.ext import (
     MessageHandler,
     CallbackContext,
     CallbackQueryHandler,
-    Persistence,
-    filters  # Исправленный импорт
+    filters,
+    PicklePersistence  # Замена Persistence
 )
 
 # Конфигурация
@@ -288,7 +288,8 @@ async def handle_admin_reply(update: Update, context: CallbackContext):
             )
         
         # Удаляем временные данные
-        del context.user_data['replying_to']
+        if 'replying_to' in context.user_data:
+            del context.user_data['replying_to']
         delete_pending_reply(user_id)
         
         try:
@@ -307,8 +308,9 @@ def main():
     # Инициализация базы данных
     init_db()
     
-    # Создание Application
-    application = Application.builder().token(TOKEN).build()
+    # Создание Application с PicklePersistence
+    persistence = PicklePersistence(filepath='bot_persistence.pickle')
+    application = Application.builder().token(TOKEN).persistence(persistence).build()
     
     # Регистрация обработчиков
     application.add_handler(CommandHandler("start", start))
